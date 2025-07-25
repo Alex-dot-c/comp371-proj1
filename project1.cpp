@@ -208,6 +208,8 @@ void processInput(GLFWwindow *window) {
 
     float cameraSpeed = 2.5f * deltaTime;
 
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -230,7 +232,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     lastX = xpos;
     lastY = ypos;
 
-    float sensitivity = 0.1f;
+    float sensitivity = 0.005f;
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
@@ -395,6 +397,9 @@ int main() {
     glm::vec3 lightPos(0.0f, 5.0f, 0.0f);
     glm::vec3 lightColor(1.0f, 1.0f,1.0f);
 
+    float arm2LR = 0.0f;   // Left/right rotation
+    float arm2UD = 0.0f; // Up/down rotation
+
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
 
@@ -417,8 +422,23 @@ int main() {
 
         float time = glfwGetTime();
 
+        const float rotationSpeed = 45.0f; // degrees per second
+
+    
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+            arm2LR += rotationSpeed * deltaTime;
+        if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+            arm2LR -= rotationSpeed * deltaTime;
+
+        if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+            arm2UD += rotationSpeed * deltaTime;
+        if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+            arm2UD -= rotationSpeed * deltaTime;
+
+
         // Floor
-        glm::mat4 modelFloor = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.0f, 0.0f)), glm::vec3(10.0f, 0.1f, 10.0f));
+        glm::mat4 modelFloor = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f)), glm::vec3(10.0f, 0.1f, 10.0f));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelFloor));
         glUniform3f(glGetUniformLocation(shaderProgram, "objectColor"), 1.0f, 1.0f, 1.0f);
         glActiveTexture(GL_TEXTURE0);
@@ -428,7 +448,7 @@ int main() {
 
         // Hierarchical robot arm
         // Base
-        glm::mat4 modelBase = glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 0.5f, 1.5f));
+        glm::mat4 modelBase = glm::scale(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.3f, 0.0f)), glm::vec3(2.5f, 0.5f, 2.5f));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelBase));
         glUniform3f(glGetUniformLocation(shaderProgram, "objectColor"), 1.0f, 1.0f, 1.0f);
         glActiveTexture(GL_TEXTURE0);
@@ -437,7 +457,9 @@ int main() {
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
         // Arm1 (child of base, rotating)
-        glm::mat4 modelArm1 = modelBase * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), time * 1.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 1.0f, 0.5f));
+        glm::mat4 modelArm1 = modelBase * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 3.75f, 0.0f)) 
+                                        * glm::rotate(glm::mat4(1.0f), 0.0f,  glm::vec3(0.0f, 1.0f, 0.0f)) 
+                                        * glm::scale(glm::mat4(1.0f), glm::vec3(0.4f, 7.0f, 0.4f));
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelArm1));
         glUniform3f(glGetUniformLocation(shaderProgram, "objectColor"), 1.0f, 1.0f, 1.0f);
         glActiveTexture(GL_TEXTURE0);
@@ -445,8 +467,15 @@ int main() {
         glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
 
-        // Arm2 (child of arm1, rotating faster)
-        glm::mat4 modelArm2 = modelArm1 * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::rotate(glm::mat4(1.0f), time * 2.0f, glm::vec3(0.0f, 1.0f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 1.0f, 0.5f));
+        // Arm2 (child of arm1, rotating faster)                                        
+        glm::mat4 modelArm2 = modelArm1 * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f))                    
+                                        * glm::rotate(glm::mat4(1.0f), glm::radians(arm2LR), glm::vec3(0.0f, 1.0f, 0.0f))  
+                                        * glm::rotate(glm::mat4(1.0f), glm::radians(arm2UD), glm::vec3(1.0f, 0.0f, 0.0f))  
+                                        * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 1.0f, 0.0f))                    
+                                        * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f, 1.0f, 0.5f));                        
+
+                                        
+                                    
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(modelArm2));
         glUniform3f(glGetUniformLocation(shaderProgram, "objectColor"), 1.0f, 1.0f, 1.0f);
         glActiveTexture(GL_TEXTURE0);
