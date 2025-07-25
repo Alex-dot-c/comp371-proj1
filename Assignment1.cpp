@@ -277,6 +277,12 @@ int main(int argc, char*argv[])
     GLuint sunTextureID = loadTexture("Textures/sun.jpg");
     GLuint mercuryTextureID = loadTexture("Textures/mercury.jpg");
     GLuint venusTextureID = loadTexture("Textures/venus.jpg");
+    GLuint earthTextureID = loadTexture("Textures/earth.jpg");
+    GLuint marsTextureID = loadTexture("Textures/mars.jpg");
+    GLuint jupiterTextureID = loadTexture("Textures/jupiter.jpg");
+    GLuint saturnTextureID = loadTexture("Textures/saturn.jpg");
+    GLuint uranusTextureID = loadTexture("Textures/uranus.jpg");
+    GLuint neptuneTextureID = loadTexture("Textures/neptune.jpg");
     
     // Black background
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -285,30 +291,46 @@ int main(int argc, char*argv[])
     int whiteShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getFragmentShaderSource());
     
 	//Setup models
-    string sunPath = "Models/sphere.obj";
-    string mercuryPath = "Models/sphere.obj";
-    string venusPath = "Models/sphere.obj";
+    string planetPath = "Models/sphere.obj";
 
 
     int sunVertices;
-    GLuint sunVAO = setupModelEBO(sunPath, sunVertices);
+    GLuint sunVAO = setupModelEBO(planetPath, sunVertices);
 
     int mercuryVertices;
-    GLuint mercuryVAO = setupModelEBO(mercuryPath, mercuryVertices);
+    GLuint mercuryVAO = setupModelEBO(planetPath, mercuryVertices);
 
     int venusVertices;
-    GLuint venusVAO = setupModelEBO(venusPath, venusVertices);
+    GLuint venusVAO = setupModelEBO(planetPath, venusVertices);
+
+    int earthVertices;
+    GLuint earthVAO = setupModelEBO(planetPath, earthVertices);
+
+    int marsVertices;
+    GLuint marsVAO = setupModelEBO(planetPath, marsVertices);
+    
+    int jupiterVertices;
+    GLuint jupiterVAO = setupModelEBO(planetPath, jupiterVertices);
+
+    int saturnVertices;
+    GLuint saturnVAO = setupModelEBO(planetPath, saturnVertices);
+
+    int uranusVertices;
+    GLuint uranusVAO = setupModelEBO(planetPath, uranusVertices);
+
+    int neptuneVertices;
+    GLuint neptuneVAO = setupModelEBO(planetPath, neptuneVertices);
 
 
 
     // Camera parameters for view transform
-    vec3 cameraPosition(9.0f, 1.0f, 20.0f);
+    vec3 cameraPosition(15.0f, 1.0f, 30.0f);
     vec3 cameraLookAt(0.0f, 0.0f, -1.0f);
     vec3 cameraUp(0.0f, 1.0f, 0.0f);
     
     // Other camera parameters
     float cameraSpeed = 1.0f;
-    float cameraFastSpeed = 2 * cameraSpeed;
+    float cameraFastSpeed = 4 * cameraSpeed;
     float cameraHorizontalAngle = 90.0f;
     float cameraVerticalAngle = 0.0f;
 
@@ -390,7 +412,7 @@ int main(int argc, char*argv[])
 
 
 
-        // Bind sun texture
+        // Bind mercury texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, mercuryTextureID);
         glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
@@ -409,12 +431,133 @@ int main(int argc, char*argv[])
 
 
 
-        // Bind sun texture
+        // Bind venus texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, venusTextureID);
         glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
         glBindVertexArray(venusVAO);
         glDrawElements(GL_TRIANGLES, venusVertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+
+
+        // Set earth world matrix
+        mat4 earthWorldMatrix = 
+			glm::translate(mat4(1.0f), vec3(10.0f, 0.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+			glm::scale(mat4(1.0f), vec3(0.05f));
+        setWorldMatrix(whiteShaderProgram, earthWorldMatrix);
+
+
+
+        // Bind earth texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, earthTextureID);
+        glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
+        glBindVertexArray(earthVAO);
+        glDrawElements(GL_TRIANGLES, earthVertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+
+
+        // Set mars world matrix
+        mat4 marsWorldMatrix = 
+			glm::translate(mat4(1.0f), vec3(12.0f, 0.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+			glm::scale(mat4(1.0f), vec3(0.04f));
+        setWorldMatrix(whiteShaderProgram, marsWorldMatrix);
+
+
+
+        // Bind mars texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, marsTextureID);
+        glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
+        glBindVertexArray(marsVAO);
+        glDrawElements(GL_TRIANGLES, marsVertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+
+
+        // Set jupiter world matrix
+        mat4 jupiterWorldMatrix = 
+			glm::translate(mat4(1.0f), vec3(15.0f, 0.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+			glm::scale(mat4(1.0f), vec3(0.15f));
+        setWorldMatrix(whiteShaderProgram, jupiterWorldMatrix);
+
+
+
+        // Bind jupiter texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, jupiterTextureID);
+        glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
+        glBindVertexArray(jupiterVAO);
+        glDrawElements(GL_TRIANGLES, jupiterVertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+
+
+        // Set saturn world matrix
+        mat4 saturnWorldMatrix = 
+			glm::translate(mat4(1.0f), vec3(19.0f, 0.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+			glm::scale(mat4(1.0f), vec3(0.14f));
+        setWorldMatrix(whiteShaderProgram, saturnWorldMatrix);
+
+
+
+        // Bind saturn texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, saturnTextureID);
+        glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
+        glBindVertexArray(saturnVAO);
+        glDrawElements(GL_TRIANGLES, saturnVertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+
+
+        // Set uranus world matrix
+        mat4 uranusWorldMatrix = 
+			glm::translate(mat4(1.0f), vec3(23.0f, 0.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+			glm::scale(mat4(1.0f), vec3(0.07f));
+        setWorldMatrix(whiteShaderProgram, uranusWorldMatrix);
+
+
+
+        // Bind uranus texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, uranusTextureID);
+        glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
+        glBindVertexArray(uranusVAO);
+        glDrawElements(GL_TRIANGLES, uranusVertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
+
+
+
+        // Set neptune world matrix
+        mat4 neptuneWorldMatrix = 
+			glm::translate(mat4(1.0f), vec3(26.0f, 0.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+			glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+			glm::scale(mat4(1.0f), vec3(0.07f));
+        setWorldMatrix(whiteShaderProgram, neptuneWorldMatrix);
+
+
+
+        // Bind neptune texture
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, neptuneTextureID);
+        glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
+        glBindVertexArray(neptuneVAO);
+        glDrawElements(GL_TRIANGLES, neptuneVertices, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
 
