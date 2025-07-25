@@ -290,6 +290,7 @@ int main(int argc, char *argv[])
     GLuint saturnTextureID = loadTexture("Textures/saturn.jpg");
     GLuint uranusTextureID = loadTexture("Textures/uranus.jpg");
     GLuint neptuneTextureID = loadTexture("Textures/neptune.jpg");
+    GLuint moonTextureID = loadTexture("Textures/moon.jpg");
 
     // Black background
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -305,6 +306,9 @@ int main(int argc, char *argv[])
 
     int mercuryVertices;
     GLuint mercuryVAO = setupModelEBO(planetPath, mercuryVertices);
+
+    int moonVertices;
+    GLuint moonVAO = setupModelEBO(planetPath, moonVertices);
 
     int venusVertices;
     GLuint venusVAO = setupModelEBO(planetPath, venusVertices);
@@ -341,6 +345,28 @@ int main(int argc, char *argv[])
     // Spinning cube at camera position
     float spinningAngle = 0.0f;
 
+    //*****Orbital angles for each planet
+    float orbitalAngleMercury = 0.0f;
+    float orbitalAngleVenus = 0.0f;
+    float orbitalAngleEarth = 0.0f;
+    float orbitalAngleMars = 0.0f;
+    float orbitalAngleJupiter = 0.0f;
+    float orbitalAngleSaturn = 0.0f;
+    float orbitalAngleUranus = 0.0f;
+    float orbitalAngleNeptune = 0.0f;
+    float orbitalAngleMoon = 0.0f;
+
+    //******Orbital Speeds (rad per second)*********
+    const float orbitalSpeedMercury = glm::radians(50.0f);
+    const float orbitalSpeedVenus = glm::radians(35.0f);
+    const float orbitalSpeedEarth = glm::radians(30.0f);
+    const float orbitalSpeedMars = glm::radians(24.0f);
+    const float orbitalSpeedJupiter = glm::radians(13.0f);
+    const float orbitalSpeedSaturn = glm::radians(9.0f);
+    const float orbitalSpeedUranus = glm::radians(6.0f);
+    const float orbitalSpeedNeptune = glm::radians(5.0f);
+    const float orbitalSpeedMoon = glm::radians(100.0f);
+
     // Set projection matrix for shader, this won't change
     mat4 projectionMatrix = glm::perspective(70.0f,           // field of view in degrees
                                              800.0f / 600.0f, // aspect ratio
@@ -373,14 +399,25 @@ int main(int argc, char *argv[])
         float dt = glfwGetTime() - lastFrameTime;
         lastFrameTime += dt;
 
+        // Spinning model rotation animation
+        spinningAngle += 45.0f * dt; //This is equivalent to 45 degrees per second
+
+        //************Update Angles
+        orbitalAngleMercury += orbitalSpeedMercury * dt;
+        orbitalAngleVenus += orbitalSpeedVenus * dt;
+        orbitalAngleEarth += orbitalSpeedEarth * dt;
+        orbitalAngleMars += orbitalSpeedMars * dt;
+        orbitalAngleJupiter += orbitalSpeedJupiter * dt;
+        orbitalAngleSaturn += orbitalSpeedSaturn * dt;
+        orbitalAngleUranus += orbitalSpeedUranus * dt;
+        orbitalAngleNeptune += orbitalSpeedNeptune * dt;
+        orbitalAngleMoon += orbitalSpeedMoon * dt;
+
         // Each frame, reset color of each pixel to glClearColor
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Draw colored geometry
         glUseProgram(whiteShaderProgram);
-
-        // Spinning model rotation animation
-        spinningAngle += 45.0f * dt; //This is equivalent to 45 degrees per second
 
         // Set the view matrix for first person camera
         mat4 viewMatrix(1.0f);
@@ -404,8 +441,12 @@ int main(int argc, char *argv[])
         glBindVertexArray(0);
 
         // Set mercury world matrix
+        mat4 mercuryPositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleMercury, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(4.0f, 0.0f, 0.0f));
+
         mat4 mercuryWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(4.0f, 0.0f, 0.0f)) *
+            mercuryPositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.03f));
@@ -420,8 +461,11 @@ int main(int argc, char *argv[])
         glBindVertexArray(0);
 
         // Set venus world matrix
+        mat4 venusPositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleVenus, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(7.0f, 0.0f, 0.0f));
         mat4 venusWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(7.0f, 0.0f, 0.0f)) *
+            venusPositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.05f));
@@ -436,8 +480,12 @@ int main(int argc, char *argv[])
         glBindVertexArray(0);
 
         // Set earth world matrix
+
+        mat4 earthPositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleEarth, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(10.0f, 0.0f, 0.0f));
         mat4 earthWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(10.0f, 0.0f, 0.0f)) *
+            earthPositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.05f));
@@ -451,9 +499,31 @@ int main(int argc, char *argv[])
         glDrawElements(GL_TRIANGLES, earthVertices, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
+        //*********  Moon  *********
+        mat4 moonPositionMatrix =
+            earthPositionMatrix *
+            glm::rotate(mat4(1.0f), orbitalAngleMoon, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(0.5f, 0.0f, 0.0f));
+        mat4 moonWorldMatrix =
+            moonPositionMatrix *
+            glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
+            glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
+            glm::scale(mat4(1.0f), vec3(0.015f));
+        setWorldMatrix(whiteShaderProgram, moonWorldMatrix);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, moonTextureID);
+        glUniform1i(glGetUniformLocation(whiteShaderProgram, "planetTexture"), 0);
+        glBindVertexArray(moonVAO);
+        glDrawElements(GL_TRIANGLES, moonVertices, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
+
         // Set mars world matrix
+        mat4 marsPositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleMars, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(12.0f, 0.0f, 0.0f));
         mat4 marsWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(12.0f, 0.0f, 0.0f)) *
+            marsPositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.04f));
@@ -468,8 +538,11 @@ int main(int argc, char *argv[])
         glBindVertexArray(0);
 
         // Set jupiter world matrix
+        mat4 jupiterPositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleJupiter, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(15.0f, 0.0f, 0.0f));
         mat4 jupiterWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(15.0f, 0.0f, 0.0f)) *
+            jupiterPositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.15f));
@@ -484,8 +557,11 @@ int main(int argc, char *argv[])
         glBindVertexArray(0);
 
         // Set saturn world matrix
+        mat4 saturnPositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleSaturn, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(19.0f, 0.0f, 0.0f));
         mat4 saturnWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(19.0f, 0.0f, 0.0f)) *
+            saturnPositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.14f));
@@ -500,8 +576,11 @@ int main(int argc, char *argv[])
         glBindVertexArray(0);
 
         // Set uranus world matrix
+        mat4 uranusPositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleUranus, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(23.0f, 0.0f, 0.0f));
         mat4 uranusWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(23.0f, 0.0f, 0.0f)) *
+            uranusPositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.07f));
@@ -516,8 +595,11 @@ int main(int argc, char *argv[])
         glBindVertexArray(0);
 
         // Set neptune world matrix
+        mat4 neptunePositionMatrix =
+            glm::rotate(mat4(1.0f), orbitalAngleNeptune, vec3(0.0f, 1.0f, 0.0f)) *
+            glm::translate(mat4(1.0f), vec3(26.0f, 0.0f, 0.0f));
         mat4 neptuneWorldMatrix =
-            glm::translate(mat4(1.0f), vec3(26.0f, 0.0f, 0.0f)) *
+            neptunePositionMatrix *
             glm::rotate(mat4(1.0f), radians(spinningAngle), vec3(0.0f, 1.0f, 0.0f)) *
             glm::rotate(mat4(1.0f), radians(-90.0f), vec3(1.0f, 0.0f, 0.0f)) *
             glm::scale(mat4(1.0f), vec3(0.07f));
