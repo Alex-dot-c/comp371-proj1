@@ -1,0 +1,29 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build OpenGL macOS",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "${workspaceFolder}/Assignment1.cpp",
+                "-o",
+                "${workspaceFolder}/comp371_proj1",
+                "-std=c++17",
+                "-I/usr/local/include",
+                "-L/usr/local/lib",
+                "-framework",
+                "OpenGL",
+                "-lglfw",
+                "-lGLEW"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        }
+    ]
+}
