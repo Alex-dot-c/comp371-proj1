@@ -3,11 +3,58 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <stb/stb_image.h>
 
 #include <iostream>
 #include <vector>
 
-const char* vertexShaderSource = R"(
+GLuint loadTexture(const char *filename)
+{
+    //Load textures with dimension data
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(filename, &width, &height, &nrChannels, 0);
+    if (!data)
+    {
+        std::cerr << "error: texture could not be found in: " << filename << std::endl;
+        return 0;
+    }
+
+    //Step2, create and bind textures.
+    GLuint textureId = 0;
+    glGenTextures(1, &textureId);
+    assert(textureId != 0);
+
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    //Step 3, set Filter parameters.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    //Step4, upload the texture to the GPU.
+    GLenum format = 0;
+    if (nrChannels == 1)
+    {
+        format = GL_RED;
+    }
+    else if (nrChannels == 3)
+    {
+        format = GL_RGB;
+    }
+    else if (nrChannels == 4)
+    {
+        format = GL_RGBA;
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+    //Step 5, Free resources,
+    stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    return textureId;
+    //TODO: replace with texture loading code
+}
+
+const char *vertexShaderSource = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 aTexCoord;
@@ -29,7 +76,7 @@ void main() {
 }
 )";
 
-const char* fragmentShaderSource = R"(
+const char *fragmentShaderSource = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -66,61 +113,64 @@ void main() {
 }
 )";
 
-struct Vertex {
+struct Vertex
+{
     glm::vec3 position;
     glm::vec2 texCoord;
     glm::vec3 normal;
 };
 
-std::vector<Vertex> getCubeVertices() {
+std::vector<Vertex> getCubeVertices()
+{
     std::vector<Vertex> vertices = {
         // Front face
-        {glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
-        {glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
-        {glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
-        {glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
+        {glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
+        {glm::vec3(0.5f, -0.5f, 0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
+        {glm::vec3(0.5f, 0.5f, 0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
+        {glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 1.0f)},
         // Back face
         {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)},
-        {glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)},
-        {glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f)},
-        {glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f)},
+        {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)},
+        {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f)},
+        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, -1.0f)},
         // Top face
-        {glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
-        {glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
-        {glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
-        {glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
+        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, 0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
+        {glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f)},
         // Bottom face
         {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)},
-        {glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)},
-        {glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)},
-        {glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)},
+        {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)},
+        {glm::vec3(0.5f, -0.5f, 0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)},
+        {glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)},
         // Right face
-        {glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
-        {glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(1.0f,0.0f,0.0f)},
-        {glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec2(1.0f,1.0f), glm::vec3(1.0f,0.0f,0.0f)},
-        {glm::vec3(0.5f, -0.5f,  0.5f), glm::vec2(0.0f,1.0f), glm::vec3(1.0f,0.0f,0.0f)},
+        {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
+        {glm::vec3(0.5f, 0.5f, 0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
+        {glm::vec3(0.5f, -0.5f, 0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
         // Left face
-        {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(1.0f,0.0f), glm::vec3(-1.0f,0.0f,0.0f)},
-        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec2(0.0f,0.0f), glm::vec3(-1.0f,0.0f,0.0f)},
-        {glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec2(0.0f,1.0f), glm::vec3(-1.0f,0.0f,0.0f)},
-        {glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec2(1.0f,1.0f), glm::vec3(-1.0f,0.0f,0.0f)}
-    };
+        {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f)},
+        {glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec2(0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f)},
+        {glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec2(0.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f)},
+        {glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec2(1.0f, 1.0f), glm::vec3(-1.0f, 0.0f, 0.0f)}};
     return vertices;
 }
 
-std::vector<unsigned int> getCubeIndices() {
+std::vector<unsigned int> getCubeIndices()
+{
     std::vector<unsigned int> indices = {
-        0, 1, 2, 2, 3, 0, // Front
-        4,5,6,6,7,4, // Back
-        8 ,9,10,10,11,8, // Top
-        12,13,14,14,15,12, // Bottom
-        16,17,18,18,19,17, // Right
-        20,21,22,22,23,20 // Left
+        0, 1, 2, 2, 3, 0,       // Front
+        4, 5, 6, 6, 7, 4,       // Back
+        8, 9, 10, 10, 11, 8,    // Top
+        12, 13, 14, 14, 15, 12, // Bottom
+        16, 17, 18, 18, 19, 17, // Right
+        20, 21, 22, 22, 23, 20  // Left
     };
     return indices;
 }
 
-unsigned int createProceduralTexture(int width, int height, unsigned char* data) {
+unsigned int createProceduralTexture(int width, int height, unsigned char *data)
+{
     unsigned int textureID;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
@@ -135,17 +185,19 @@ unsigned int createProceduralTexture(int width, int height, unsigned char* data)
     return textureID;
 }
 
-unsigned int compileShader(unsigned int type, const char* source) {
+unsigned int compileShader(unsigned int type, const char *source)
+{
     unsigned int id = glCreateShader(type);
     glShaderSource(id, 1, &source, nullptr);
     glCompileShader(id);
 
     int result;
     glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-    if (result == GL_FALSE) {
+    if (result == GL_FALSE)
+    {
         int length;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        char* message = new char[length];
+        char *message = new char[length];
         glGetShaderInfoLog(id, length, &length, message);
         std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader: " << message << std::endl;
         delete[] message;
@@ -156,7 +208,8 @@ unsigned int compileShader(unsigned int type, const char* source) {
     return id;
 }
 
-unsigned int createShaderProgram() {
+unsigned int createShaderProgram()
+{
     unsigned int program = glCreateProgram();
     unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
     unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
@@ -168,10 +221,11 @@ unsigned int createShaderProgram() {
     // Check link status
     int linkStatus;
     glGetProgramiv(program, GL_LINK_STATUS, &linkStatus);
-    if (linkStatus == GL_FALSE) {
+    if (linkStatus == GL_FALSE)
+    {
         int length;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
-        char* message = new char[length];
+        char *message = new char[length];
         glGetProgramInfoLog(program, length, &length, message);
         std::cout << "Failed to link shader program: " << message << std::endl;
         delete[] message;
@@ -188,7 +242,7 @@ unsigned int createShaderProgram() {
 }
 
 // Camera variables
-glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 5.0f);  // Moved slightly higher for better view
+glm::vec3 cameraPos = glm::vec3(0.0f, 1.0f, 5.0f); // Moved slightly higher for better view
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
@@ -201,7 +255,8 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-void processInput(GLFWwindow *window) {
+void processInput(GLFWwindow *window)
+{
     float currentFrame = glfwGetTime();
     deltaTime = currentFrame - lastFrame;
     lastFrame = currentFrame;
@@ -218,10 +273,14 @@ void processInput(GLFWwindow *window) {
         cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
-    if (firstMouse) {
+void mouse_callback(GLFWwindow *window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
         lastX = xpos;
         lastY = ypos;
         firstMouse = false;
@@ -239,22 +298,27 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     yaw += xoffset;
     pitch += yoffset;
 
-    if (pitch > 89.0f) pitch = 89.0f;
-    if (pitch < -89.0f) pitch = -89.0f;
+    if (pitch > 89.0f)
+        pitch = 89.0f;
+    if (pitch < -89.0f)
+        pitch = -89.0f;
 
     glm::vec3 direction;
     direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
     direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));  // Fixed: removed negative sign for correct -Z direction
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch)); // Fixed: removed negative sign for correct -Z direction
     cameraFront = glm::normalize(direction);
 }
 
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+{
     // Unused for now
 }
 
-int main() {
-    if (!glfwInit()) {
+int main()
+{
+    if (!glfwInit())
+    {
         std::cout << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
@@ -262,9 +326,11 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "3D Interactive Robot Arm", nullptr, nullptr);
-    if (window == nullptr) {
+    GLFWwindow *window = glfwCreateWindow(800, 600, "3D Interactive Robot Arm", nullptr, nullptr);
+    if (window == nullptr)
+    {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         return -1;
@@ -275,7 +341,8 @@ int main() {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    if (glewInit() != GLEW_OK) {
+    if (glewInit() != GLEW_OK)
+    {
         std::cout << "Failed to initialize GLEW" << std::endl;
         return -1;
     }
@@ -284,7 +351,8 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     unsigned int shaderProgram = createShaderProgram();
-    if (shaderProgram == 0) {
+    if (shaderProgram == 0)
+    {
         std::cout << "Shader program creation failed" << std::endl;
         return -1;
     }
@@ -306,15 +374,15 @@ int main() {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, cubeIndices.size() * sizeof(unsigned int), cubeIndices.data(), GL_STATIC_DRAW);
 
     // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, position));
     glEnableVertexAttribArray(0);
 
     // TexCoord
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, texCoord));
     glEnableVertexAttribArray(1);
 
     // Normal
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, normal));
     glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -324,17 +392,22 @@ int main() {
     const int TEX_SIZE = 16;
     // Texture 1: Checkerboard red/white
     unsigned char texData1[TEX_SIZE * TEX_SIZE * 3];
-    for (int y = 0; y < TEX_SIZE; y++) {
-        for (int x = 0; x < TEX_SIZE; x++) {
+    for (int y = 0; y < TEX_SIZE; y++)
+    {
+        for (int x = 0; x < TEX_SIZE; x++)
+        {
             int idx = (y * TEX_SIZE + x) * 3;
-            if ((x / 4 + y / 4) % 2 == 0) {
+            if ((x / 4 + y / 4) % 2 == 0)
+            {
                 texData1[idx] = 255; // Red
-                texData1[idx+1] = 0;
-                texData1[idx+2] = 0;
-            } else {
+                texData1[idx + 1] = 0;
+                texData1[idx + 2] = 0;
+            }
+            else
+            {
                 texData1[idx] = 255;
-                texData1[idx+1] = 255;
-                texData1[idx+2] = 255;
+                texData1[idx + 1] = 255;
+                texData1[idx + 2] = 255;
             }
         }
     }
@@ -342,17 +415,22 @@ int main() {
 
     // Texture 2: Blue/green stripes
     unsigned char texData2[TEX_SIZE * TEX_SIZE * 3];
-    for (int y = 0; y < TEX_SIZE; y++) {
-        for (int x = 0; x < TEX_SIZE; x++) {
+    for (int y = 0; y < TEX_SIZE; y++)
+    {
+        for (int x = 0; x < TEX_SIZE; x++)
+        {
             int idx = (y * TEX_SIZE + x) * 3;
-            if ((x / 4) % 2 == 0) {
-                texData2[idx]  = 0;
-                texData2[idx+1] = 0;
-                texData2[idx+2] = 255; // Blue
-            } else {
+            if ((x / 4) % 2 == 0)
+            {
                 texData2[idx] = 0;
-                texData2[idx+1] = 255;
-                texData2[idx+2] = 0; // Green
+                texData2[idx + 1] = 0;
+                texData2[idx + 2] = 255; // Blue
+            }
+            else
+            {
+                texData2[idx] = 0;
+                texData2[idx + 1] = 255;
+                texData2[idx + 2] = 0; // Green
             }
         }
     }
@@ -360,17 +438,22 @@ int main() {
 
     // Texture 3: Yellow/black checker
     unsigned char texData3[TEX_SIZE * TEX_SIZE * 3];
-    for (int y = 0; y < TEX_SIZE; y++) {
-        for (int x = 0; x < TEX_SIZE; x++) {
+    for (int y = 0; y < TEX_SIZE; y++)
+    {
+        for (int x = 0; x < TEX_SIZE; x++)
+        {
             int idx = (y * TEX_SIZE + x) * 3;
-            if ((x / 4 + y / 4) % 2 == 0) {
+            if ((x / 4 + y / 4) % 2 == 0)
+            {
                 texData3[idx] = 255; // Yellow
-                texData3[idx+1] = 255;
-                texData3[idx+2] = 0;
-            } else {
+                texData3[idx + 1] = 255;
+                texData3[idx + 2] = 0;
+            }
+            else
+            {
                 texData3[idx] = 0;
-                texData3[idx+1] = 0;
-                texData3[idx+2] = 0;
+                texData3[idx + 1] = 0;
+                texData3[idx + 2] = 0;
             }
         }
     }
@@ -378,29 +461,34 @@ int main() {
 
     // Floor texture: Gray stripes
     unsigned char texData4[TEX_SIZE * TEX_SIZE * 3];
-    for (int y = 0; y < TEX_SIZE; y++) {
-        for (int x = 0; x < TEX_SIZE; x++) {
+    for (int y = 0; y < TEX_SIZE; y++)
+    {
+        for (int x = 0; x < TEX_SIZE; x++)
+        {
             int idx = (y * TEX_SIZE + x) * 3;
-            if ((y / 4) % 2 == 0) {
+            if ((y / 4) % 2 == 0)
+            {
                 texData4[idx] = 128;
-                texData4[idx+1] = 128;
-                texData4[idx+2] = 128;
-            } else {
+                texData4[idx + 1] = 128;
+                texData4[idx + 2] = 128;
+            }
+            else
+            {
                 texData4[idx] = 64;
-                texData4[idx+1] = 64;
-                texData4[idx+2] = 64;
+                texData4[idx + 1] = 64;
+                texData4[idx + 2] = 64;
             }
         }
     }
     unsigned int texture4 = createProceduralTexture(TEX_SIZE, TEX_SIZE, texData4);
 
     glm::vec3 lightPos(0.0f, 5.0f, 0.0f);
-    glm::vec3 lightColor(1.0f, 1.0f,1.0f);
+    glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
-    float arm2LR = 0.0f;   // Left/right rotation
-    float arm2UD = 0.0f; // Up/down rotation
+ 
 
     while (!glfwWindowShouldClose(window)) {
+        main
         processInput(window);
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
